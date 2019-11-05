@@ -1,0 +1,103 @@
+#include <Arduino.h>
+//http://www.ti.com/lit/ds/symlink/l293.pdf
+
+#include <IRremote.h>// Include IR Remote Library by Ken Shirriff
+int IRLed();    // Initializing different variables used for interacting with the LED
+int value;
+int direction;
+
+#define I1 8  // Control pin 1 for motor 1
+#define I2 9  // Control pin 2 for motor 1
+#define I3 12  // Control pin 1 for motor 2
+#define I4 13  // Control pin 2 for motor 2
+ 
+const int RECV_PIN = 6;  // Define sensor pin
+ 
+IRrecv irrecv(RECV_PIN);  // Define IR Receiver and Results Objects
+decode_results results;
+
+void setup() {
+  Serial.begin(9600);
+  irrecv.enableIRIn(); // Enable the IR Receiver
+
+  pinMode(I1, OUTPUT);  //Set motor control pins as outputs
+  pinMode(I2, OUTPUT);
+  pinMode(I3, OUTPUT);
+  pinMode(I4, OUTPUT);
+}
+ 
+void loop() {
+  Serial.println("-----------------------------Main Loop Start-----------------------------------");
+  direction=IRLed();  //Set variable direction to the output from the LED function
+  while (direction==765){   //forwards
+    Serial.println("-----------------------------Forward Loop Start-----------------------------------");
+    digitalWrite(I1, LOW);      //Sets the control pins to make both motors run
+    digitalWrite(I2, HIGH);
+    digitalWrite(I3, LOW);
+    digitalWrite(I4, HIGH);
+    direction = 0;        //resets direction variable to prvent possible infinite loops
+    Serial.println(direction);
+    Serial.println("-----------------------------Forward Loop End-----------------------------------");
+    delay(500);
+    }
+    
+while (direction== -26521){  //backwards
+    Serial.println("-----------------------------Back Loop Start-----------------------------------");
+    digitalWrite(I1, HIGH);   //sets control pins to make motors run in reverse polarity
+    digitalWrite(I2, LOW);
+    digitalWrite(I3, HIGH);
+    digitalWrite(I4, LOW);
+    direction = 0;   //resets direction variable to prvent possible infinite loops
+    Serial.println(direction);
+    Serial.println("-----------------------------Back Loop End-----------------------------------");
+    delay(500);
+    }
+
+    while (direction== -8161){  //left
+    Serial.println("-----------------------------Left Loop Start-----------------------------------");
+    digitalWrite(I1, LOW);  //sets right motor pin to be forward, the other off, which turns left
+    digitalWrite(I2, HIGH);
+    digitalWrite(I3, LOW);
+    digitalWrite(I4, LOW);
+    direction = 0;   //resets direction variable to prvent possible infinite loops
+    Serial.println(direction);
+    Serial.println("-----------------------------Left Loop End-----------------------------------");
+    delay(500);
+    }
+
+    while (direction== -28561){  //right
+    Serial.println("-----------------------------Right Loop Start-----------------------------------");
+    digitalWrite(I1, LOW);    //sets left motor pin to be forward, the other off, which turns right
+    digitalWrite(I2, LOW);
+    digitalWrite(I3, LOW);
+    digitalWrite(I4, HIGH);
+    direction = 0;   //resets direction variable to prvent possible infinite loops
+    Serial.println(direction);
+    Serial.println("-----------------------------Left Loop End-----------------------------------");
+    delay(500);
+    }
+
+    digitalWrite(I1, LOW);    //resets motors to both off to stop movement
+    digitalWrite(I2, LOW);
+    digitalWrite(I3, LOW);
+    digitalWrite(I4, LOW);
+    Serial.println("-----------------------------Main Loop End-----------------------------------");
+}
+
+
+int IRLed() {
+  Serial.println("-----------------------------LED Loop Start-----------------------------------");
+  if (irrecv.decode(&results)){
+    Serial.println("-----------------------------LED If Start-----------------------------------");
+        Serial.println(results.value, HEX); // Print Code in HEX
+        int value = results.value;    //sets return value to the decoded infared signal
+        Serial.println(value);
+         irrecv.resume();    //resumes taking in inputs
+         Serial.println("-----------------------------LED If End-----------------------------------");
+         return value;
+  }
+  else {
+    Serial.println("-----------------------------LED Loop End-----------------------------------");
+    return 1;     //if no signal from the remote the loop returns 1
+    }
+}
