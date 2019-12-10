@@ -1,0 +1,148 @@
+by: KaylaN Hathaway. For ee106
+int value;        //Initialize all variables
+int direction;
+int duration;
+int distance;
+int ltick;
+int btick;
+int proxim();
+void back();
+void forward();
+void right();
+void left();
+
+#define I1 8  // Control pin 1 for motor 1
+#define I2 9  // Control pin 2 for motor 1
+#define I3 12  // Control pin 1 for motor 2
+#define I4 13  // Control pin 2 for motor 2
+
+const int trigPin = 5; //Pins for the proximity sensor
+const int echoPin = 6;
+void setup() 
+  {
+  pinMode(trigPin, OUTPUT); //Proxim sensor pin setup
+  pinMode(echoPin, INPUT); 
+
+  pinMode(I1, OUTPUT);  //Set motor control pins as outputs
+  pinMode(I2, OUTPUT);
+  pinMode(I3, OUTPUT);
+  pinMode(I4, OUTPUT);
+  
+  Serial.begin(9600); //Start serial monitor for debugging
+  }
+ 
+void loop() 
+  {
+  Serial.println("-----------------------------Main Loop Start-----------------------------------");  //Prints loop start for debugging
+  
+  direction = 1;  //Default direction to start is forward
+  distance = proxim();  //Set variable equal to proxim fucntion to get a distance value in cm
+
+  
+  if(distance<=15 && btick<=1)   //If close to an obstacle, and have not went backwards yet, go back
+    {  
+    direction = 2;
+    }
+  if(distance<=15 && btick>1) //if close to an obstacle, and have went backwardds once, turn left. Then reset back counter
+    {    
+    direction = 3;
+    btick = 0;
+    }
+  if(distance<=15 && btick>1 && ltick>3)    //if close to an obstacle, went backwards once, AND have turned left 3 times, then turn right. Reset left counter. To avoid pillar traps
+    {
+    direction = 4;
+    ltick=0;
+    }
+
+
+  switch (direction)    //switch case that runs each direction function
+    {
+    case 1:
+      forward();
+    break;
+    case 2:
+      back();
+      btick++;
+    break;
+    case 3:
+      left();
+      ltick++;
+    break;
+    case 4:
+      right();
+    break;
+    } 
+
+    digitalWrite(I1, LOW);      //Sets the control pins to make both motors off between loops
+    digitalWrite(I2, LOW);
+    digitalWrite(I3, LOW);
+    digitalWrite(I4, LOW);
+    delay(10);      //Adds pause to slow robot slightly, for human ease of capture
+
+    Serial.println("-----------------------------Main Loop End-----------------------------------");   //Prints loop end for debugging
+  }
+
+
+
+
+int proxim() //Function to get distance information from proximity sensor. In centimeters
+  {    
+  digitalWrite(trigPin, LOW); 
+  delayMicroseconds(2); 
+  digitalWrite(trigPin, HIGH); 
+  delayMicroseconds(10); 
+  digitalWrite(trigPin, LOW); 
+  duration = pulseIn(echoPin, HIGH); 
+  distance = (duration*.0343)/2; 
+  Serial.println(distance);
+  return distance;    //Returns a variable "distance" in centimeters
+  }
+
+
+void back() //Function for running robot backwards
+  {
+  Serial.println("-----------------------------Back Loop Start-----------------------------------");
+  digitalWrite(I1, LOW);      //Sets the control pins to make both motors run backwards
+  digitalWrite(I2, HIGH);
+  digitalWrite(I3, LOW);
+  digitalWrite(I4, HIGH);
+  Serial.println(direction);
+  Serial.println("-----------------------------Back Loop End-----------------------------------");
+  delay(150);
+  }
+  
+void forward()  //Function for running robot forwards
+  {
+  Serial.println("-----------------------------Forward Loop Start-----------------------------------");
+  digitalWrite(I1, HIGH);   //sets control pins to make motors run forward
+  digitalWrite(I2, LOW);
+  digitalWrite(I3, HIGH);
+  digitalWrite(I4, LOW);
+  Serial.println(direction);
+  Serial.println("-----------------------------Forward Loop End-----------------------------------");
+  delay(150);
+  }
+
+void left()    //Function for robot to turn left
+  {
+  Serial.println("-----------------------------Left Loop Start-----------------------------------");
+  digitalWrite(I1, LOW);  //sets right motor pin to be forward, the left backwards, which turns left
+  digitalWrite(I2, HIGH);
+  digitalWrite(I3, HIGH);
+  digitalWrite(I4, LOW);
+  Serial.println(direction);
+  Serial.println("-----------------------------Left Loop End-----------------------------------");
+  delay(300);
+  }
+  
+void right()  //Function for robot to turn right
+  {
+  Serial.println("-----------------------------Right Loop Start-----------------------------------");
+  digitalWrite(I1, HIGH);    //sets right motor pin backwards, the left forwards, which turns right
+  digitalWrite(I2, LOW);
+  digitalWrite(I3, LOW);
+  digitalWrite(I4, HIGH);
+  Serial.println(direction);
+  Serial.println("-----------------------------Left Loop End-----------------------------------");
+  delay(300);
+  }
